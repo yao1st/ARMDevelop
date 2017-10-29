@@ -1,4 +1,9 @@
 #include "timer.h"
+#include "led.h"
+extern u32 cnt;
+extern u16 cnt1;
+extern u16 step1d;
+extern u16 step1a;
 void TIM2_Int_Init(u16 arr, u16 psc)
 {
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
@@ -36,7 +41,18 @@ void TIM2_IRQHandler(void)
 	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
 	{
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-		PUL_1A = !PUL_1A;
+//		PUL_1A = !PUL_1A;
+		cnt = cnt + 1;
+		if (cnt % cnt1 == 0)
+		{
+			PUL_1A = !PUL_1A;
+			step1a = step1a + 1;
+			if (step1a == step1d)
+			{
+				TIM_Cmd(TIM2, DISABLE);
+				LED0 = !LED0;
+			}
+		}
 	}
 }
 
