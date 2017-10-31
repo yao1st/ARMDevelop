@@ -13,14 +13,14 @@ int main(void)
 	u16 psc = 17;
 //	u16 xifen = 10000;
 	cnt = 0;
-	cnt1 = 100;
-	step1d = 10000;
+	cnt1 = 250;
+	step1d = 40000;
 	step1a = 0;
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 	delay_init();
 	LED_Init();
 	uart_init(115200);
-	delay_ms(3000);
+//	delay_ms(3000);
 	TIM2_Int_Init(arr, psc);
 	while(1)
 	{
