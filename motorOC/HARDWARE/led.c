@@ -1,18 +1,5 @@
 #include "led.h"
-
-//////////////////////////////////////////////////////////////////////////////////	 
-//本程序只供学习使用，未经作者许可，不得用于其它任何用途
-//ALIENTEK战舰STM32开发板
-//LED驱动代码	   
-//正点原子@ALIENTEK
-//技术论坛:www.openedv.com
-//修改日期:2012/9/2
-//版本：V1.0
-//版权所有，盗版必究。
-//Copyright(C) 广州市星翼电子科技有限公司 2009-2019
-//All rights reserved									  
-////////////////////////////////////////////////////////////////////////////////// 	  
- 
+#include "delay.h"
 //初始化PB5和PE5为输出口.并使能这两个口的时钟		    
 //LED IO初始化
 void LED_Init(void)
@@ -32,3 +19,26 @@ void LED_Init(void)
  GPIO_SetBits(GPIOE,GPIO_Pin_5); 						 //PE.5 输出高 
 }
  
+void LED1_Flicker(u16 times)
+{
+	for ( ;times>0;times--)
+	{
+		LED1 = !LED1;
+		delay_ms(500);
+		LED1 = !LED1;
+		delay_ms(500);
+	}
+}
+
+void LED0_Flicker(u16 times)
+{
+	for ( ;times>0;times--)
+	{
+		LED0 = !LED0;
+		delay_ms(500);
+		LED0 = !LED0;
+		delay_ms(500);
+	}
+}
+
+

@@ -423,6 +423,11 @@
               <FileType>1</FileType>
               <FilePath>.\main.c</FilePath>
             </File>
+            <File>
+              <FileName>globalconfig.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\globalconfig.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -457,6 +462,11 @@
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>dirc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\dirc.c</FilePath>
             </File>
           </Files>
         </Group>

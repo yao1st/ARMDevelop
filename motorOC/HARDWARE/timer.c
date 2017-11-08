@@ -1,9 +1,9 @@
 #include "timer.h"
-//#include "dirc.h"
+#include "globalconfig.h"
 
 u16 capture = 0;
-extern u16 TIM2CC1;
-extern u16 TIM2CC2;
+
+extern u16 timcc[MotorNum];
 extern u16 step_a;
 extern u16 step_d;
 void TIM_Congfig_Init(u16 psc)
@@ -24,7 +24,7 @@ void TIM_Congfig_Init(u16 psc)
 	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Toggle;
 	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
 	TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Disable;
-	TIM_OCInitStructure.TIM_Pulse = TIM2CC1;
+	TIM_OCInitStructure.TIM_Pulse = timcc[0];
 	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
 	TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
 	TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
@@ -33,14 +33,12 @@ void TIM_Congfig_Init(u16 psc)
 	TIM_OC1Init(TIM2, &TIM_OCInitStructure);
 	TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Disable);
 	
-	TIM_OCInitStructure.TIM_Pulse = TIM2CC2;
+	TIM_OCInitStructure.TIM_Pulse = timcc[1];
 	TIM_OC2Init(TIM2, &TIM_OCInitStructure);
 	TIM_OC2PreloadConfig(TIM2, TIM_OCPreload_Disable);
 	
-	//enable the TIM
-	
 	TIM_ITConfig(TIM2, TIM_IT_CC1 | TIM_IT_CC2, ENABLE);
-//	TIM_Cmd(TIM2, ENABLE);
+
 }
 
 void TIM_Startup(void)
@@ -87,14 +85,14 @@ void TIM2_IRQHandler(void)
 		{
 			TIM_Shutdown();
 		}
-		TIM_SetCompare1(TIM2, capture + TIM2CC1);
+		TIM_SetCompare1(TIM2, capture + timcc[0]);
 	}
 	
 	if (TIM_GetITStatus(TIM2, TIM_IT_CC2) != RESET)
 	{
 		TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
 		capture = TIM_GetCapture2(TIM2);
-		TIM_SetCompare2(TIM2, capture + TIM2CC2);
+		TIM_SetCompare2(TIM2, capture + timcc[1]);
 	}
 }
 
