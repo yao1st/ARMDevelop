@@ -1,9 +1,10 @@
 import sys
 import serial
 from PyQt5.QtWidgets import (QMainWindow, QRadioButton, QAction, QMenu, QWidget, QMessageBox, QLineEdit,
-	QDesktopWidget, QApplication, QHBoxLayout, QVBoxLayout, QGridLayout, QPushButton, QLabel, QButtonGroup)
+	QDesktopWidget, QApplication, QHBoxLayout, QVBoxLayout, QGridLayout, QPushButton, QLabel, QButtonGroup, QComboBox)
 from PyQt5.QtCore import Qt 
 from PyQt5.QtGui import QFont
+import struct
 
 class Window(QWidget):
 	"""docstring for Window"""
@@ -12,6 +13,8 @@ class Window(QWidget):
 		self.ser = None
 		self.com = 'com3'
 		self.section = 5
+		self.baudrate = 115200
+		self.MotorNum = 4
 		self.initUI()
 
 	def initUI(self):
@@ -21,6 +24,12 @@ class Window(QWidget):
 
 		buttonOpenUsart = self.createPushButton('Open USART',tip='open Usart Port, default is COM3', slot=self.USARTOpen)
 		buttonCloseUsart = self.createPushButton('Close USART',tip='close existing Usart Port', slot=self.USARTClose)
+		baudChooseBox = QComboBox(self)
+		baudChooseBox.addItem('115200')
+		baudChooseBox.addItem('9600')
+		baudChooseBox.addItem('56000')
+		baudChooseBox.activated[str].connect(self.changeBaudRate)
+
 		rbtnChangetoCOM1 = self.createRadioButton('COM1', tip='set USART port to COM1', slot=self.changeUsartCom)
 		rbtnChangetoCOM2 = self.createRadioButton('COM2', tip='set USART port to COM2', slot=self.changeUsartCom)
 		rbtnChangetoCOM3 = self.createRadioButton('COM3', tip='set USART port to COM3', slot=self.changeUsartCom)
@@ -30,13 +39,33 @@ class Window(QWidget):
 		bg1.addButton(rbtnChangetoCOM3, 13)
 
 		usartLayout = QHBoxLayout()
+		usartLayout.addStretch(1)
 		usartLayout.addWidget(buttonOpenUsart)
 		usartLayout.addStretch(1)
 		usartLayout.addWidget(buttonCloseUsart)
 		usartLayout.addStretch(1)
+		usartLayout.addWidget(QLabel('Baud'))
+		usartLayout.addWidget(baudChooseBox)
+		usartLayout.addStretch(1)
 		usartLayout.addWidget(rbtnChangetoCOM1)
 		usartLayout.addWidget(rbtnChangetoCOM2)
 		usartLayout.addWidget(rbtnChangetoCOM3)
+		usartLayout.addStretch(1)
+
+		btnAllTest = self.createPushButton('All Test', tip='all motors moves slightly', slot = self.alltest)
+		btnStartup = self.createPushButton('Startup', tip='startup motors(after config)', slot = self.startup)
+		btnShutdown = self.createPushButton('Shutdown', tip='Shutdown motors', slot = self.shutdown)
+		btnZero = self.createPushButton('Zero', tip='motor moves to initial state', slot =self.zero)
+		motorMainFuncLayout = QHBoxLayout()
+		motorMainFuncLayout.addStretch(1)
+		motorMainFuncLayout.addWidget(btnAllTest)
+		motorMainFuncLayout.addStretch(1)
+		motorMainFuncLayout.addWidget(btnStartup)
+		motorMainFuncLayout.addStretch(1)
+		motorMainFuncLayout.addWidget(btnShutdown)
+		motorMainFuncLayout.addStretch(1)
+		motorMainFuncLayout.addWidget(btnZero)
+		motorMainFuncLayout.addStretch(1)
 
 		motorModeLayout = QHBoxLayout()
 		djtsLabel = QLabel('Motor Test')
@@ -55,57 +84,6 @@ class Window(QWidget):
 		motorModeLayout.addWidget(rbtnUserVelo)
 		motorModeLayout.addStretch(2)
 
-
-		motorNoLayout = QVBoxLayout()
-		motorNoLayout.addWidget(QLabel('No.'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('A1'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('A2'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('A3'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('B1'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('B2'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('B3'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('C1'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('C2'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('C3'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('D1'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('D2'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('D3'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('E1'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('E2'))
-		motorNoLayout.addSpacing(1)
-		motorNoLayout.addStretch(1)
-		motorNoLayout.addWidget(QLabel('E3'))
-
-		motorAngleLayout = QVBoxLayout()
-
 		angleSubmit = self.createPushButton('angle', tip='submit angle changes', slot=self.angleChanged)
 		A1Angle = QLineEdit()
 		A2Angle = QLineEdit()
@@ -122,10 +100,9 @@ class Window(QWidget):
 		E1Angle = QLineEdit()
 		E2Angle = QLineEdit()
 		E3Angle = QLineEdit()
-		motorAngleLayout.addWidget(angleSubmit)
-		motorAngleLayout = self.addwt(motorAngleLayout, [A1Angle, A2Angle, A3Angle, B1Angle, B2Angle, B3Angle, C1Angle, C2Angle, C3Angle, D1Angle, D2Angle, D3Angle, E1Angle, E2Angle, E3Angle])
+		self.AngleLineEdit = [A1Angle, A2Angle, A3Angle, B1Angle, B2Angle, B3Angle, C1Angle, C2Angle, C3Angle, D1Angle, D2Angle, D3Angle, E1Angle, E2Angle, E3Angle]
 
-		motorSpeedLayout = QVBoxLayout()
+
 		speedSubmit = self.createPushButton('Speed', tip='submit speed changes', slot=self.speedChanged)
 		A1Speed = QLineEdit()
 		A2Speed = QLineEdit()
@@ -142,10 +119,7 @@ class Window(QWidget):
 		E1Speed = QLineEdit()
 		E2Speed = QLineEdit()
 		E3Speed = QLineEdit()
-		motorSpeedLayout.addWidget(speedSubmit)
-		motorSpeedLayout = self.addwt(motorSpeedLayout, [A1Speed, A2Speed, A3Speed, B1Speed, B2Speed, B3Speed, C1Speed, C2Speed, C3Speed, D1Speed, D2Speed, D3Speed, E1Speed, E2Speed, E3Speed])
 
-		singStepZLayout = QVBoxLayout()
 		stepNumZ = self.createLineEdit(placeholder='steps(+)')
 		A1SingleStepZ = self.createPushButton(text='+', tip='move fixed steps clockwise', slot=self.singleStepZ)
 		A2SingleStepZ = self.createPushButton(text='+', tip='move fixed steps clockwise', slot=self.singleStepZ)
@@ -162,14 +136,7 @@ class Window(QWidget):
 		E1SingleStepZ = self.createPushButton(text='+', tip='move fixed steps clockwise', slot=self.singleStepZ)
 		E2SingleStepZ = self.createPushButton(text='+', tip='move fixed steps clockwise', slot=self.singleStepZ)
 		E3SingleStepZ = self.createPushButton(text='+', tip='move fixed steps clockwise', slot=self.singleStepZ)
-		singStepZLayout.addWidget(stepNumZ)
-		singStepZLayout = self.addwt(singStepZLayout, [A1SingleStepZ, A2SingleStepZ, A3SingleStepZ, 
-			B1SingleStepZ, B2SingleStepZ, B3SingleStepZ, 
-			C1SingleStepZ, C2SingleStepZ, C3SingleStepZ, 
-			D1SingleStepZ, D2SingleStepZ, D3SingleStepZ, 
-			E1SingleStepZ, E2SingleStepZ, E3SingleStepZ])
 
-		singStepFLayout = QVBoxLayout()
 		stepNumF = self.createLineEdit(placeholder='steps(-)')
 		A1SingleStepF = self.createPushButton(text='-', tip='move fixed steps anticlockwise', slot=self.singleStepF)
 		A2SingleStepF = self.createPushButton(text='-', tip='move fixed steps anticlockwise', slot=self.singleStepF)
@@ -186,33 +153,55 @@ class Window(QWidget):
 		E1SingleStepF = self.createPushButton(text='-', tip='move fixed steps anticlockwise', slot=self.singleStepF)
 		E2SingleStepF = self.createPushButton(text='-', tip='move fixed steps anticlockwise', slot=self.singleStepF)
 		E3SingleStepF = self.createPushButton(text='-', tip='move fixed steps anticlockwise', slot=self.singleStepF)
-		singStepFLayout.addWidget(stepNumF)
-		singStepFLayout = self.addwt(singStepFLayout, [A1SingleStepF, A2SingleStepF, A3SingleStepF, 
-			B1SingleStepF, B2SingleStepF, B3SingleStepF, 
-			C1SingleStepF, C2SingleStepF, C3SingleStepF, 
-			D1SingleStepF, D2SingleStepF, D3SingleStepF, 
-			E1SingleStepF, E2SingleStepF, E3SingleStepF])
 
+		motorLayout0 = QHBoxLayout()
+		motorLayout0 = self.addwtorlt(motorLayout0, [QLabel('No.'), angleSubmit, speedSubmit, stepNumZ, stepNumF])
+		motorLayoutA1 = QHBoxLayout()
+		motorLayoutA1 = self.addwtorlt(motorLayoutA1, [QLabel('A1'), A1Angle, A1Speed, A1SingleStepZ, A1SingleStepF])
+		motorLayoutA2 = QHBoxLayout()
+		motorLayoutA2 = self.addwtorlt(motorLayoutA2, [QLabel('A2'), A2Angle, A2Speed, A2SingleStepZ, A2SingleStepF])
+		motorLayoutA3 = QHBoxLayout()
+		motorLayoutA3 = self.addwtorlt(motorLayoutA3, [QLabel('A3'), A3Angle, A3Speed, A3SingleStepZ, A3SingleStepF])
+		motorLayoutB1 = QHBoxLayout()
+		motorLayoutB1 = self.addwtorlt(motorLayoutB1, [QLabel('B1'), B1Angle, B1Speed, B1SingleStepZ, B1SingleStepF])
+		motorLayoutB2 = QHBoxLayout()
+		motorLayoutB2 = self.addwtorlt(motorLayoutB2, [QLabel('B2'), B2Angle, B2Speed, B2SingleStepZ, B2SingleStepF])
+		motorLayoutB3 = QHBoxLayout()
+		motorLayoutB3 = self.addwtorlt(motorLayoutB3, [QLabel('B3'), B3Angle, B3Speed, B3SingleStepZ, B3SingleStepF])
+		motorLayoutC1 = QHBoxLayout()
+		motorLayoutC1 = self.addwtorlt(motorLayoutC1, [QLabel('C1'), C1Angle, C1Speed, C1SingleStepZ, C1SingleStepF])
+		motorLayoutC2 = QHBoxLayout()
+		motorLayoutC2 = self.addwtorlt(motorLayoutC2, [QLabel('C2'), C2Angle, C2Speed, C2SingleStepZ, C2SingleStepF])
+		motorLayoutC3 = QHBoxLayout()
+		motorLayoutC3 = self.addwtorlt(motorLayoutC3, [QLabel('C3'), C3Angle, C3Speed, C3SingleStepZ, C3SingleStepF])
+		motorLayoutD1 = QHBoxLayout()
+		motorLayoutD1 = self.addwtorlt(motorLayoutD1, [QLabel('D1'), D1Angle, D1Speed, D1SingleStepZ, D1SingleStepF])
+		motorLayoutD2 = QHBoxLayout()
+		motorLayoutD2 = self.addwtorlt(motorLayoutD2, [QLabel('D2'), D2Angle, D2Speed, D2SingleStepZ, D2SingleStepF])
+		motorLayoutD3 = QHBoxLayout()
+		motorLayoutD3 = self.addwtorlt(motorLayoutD3, [QLabel('D3'), D3Angle, D3Speed, D3SingleStepZ, D3SingleStepF])
+		motorLayoutE1 = QHBoxLayout()
+		motorLayoutE1 = self.addwtorlt(motorLayoutE1, [QLabel('E1'), E1Angle, E1Speed, E1SingleStepZ, E1SingleStepF])
+		motorLayoutE2 = QHBoxLayout()
+		motorLayoutE2 = self.addwtorlt(motorLayoutE2, [QLabel('E2'), E2Angle, E2Speed, E2SingleStepZ, E2SingleStepF])
+		motorLayoutE3 = QHBoxLayout()
+		motorLayoutE3 = self.addwtorlt(motorLayoutE3, [QLabel('E3'), E3Angle, E3Speed, E3SingleStepZ, E3SingleStepF])
 
-		motorLayout = QHBoxLayout()
-		motorLayout.addStretch(1)
-		motorLayout.addLayout(motorNoLayout)
-		motorLayout.addStretch(1)
-		motorLayout.addLayout(motorAngleLayout)
-		motorLayout.addStretch(1)
-		motorLayout.addLayout(motorSpeedLayout)
-		motorLayout.addStretch(1)
-		motorLayout.addLayout(singStepZLayout)
-		motorLayout.addStretch(1)
-		motorLayout.addLayout(singStepFLayout)
-		motorLayout.addStretch(1)
+		motorLayout = QVBoxLayout()
+		motorLayout = self.addwtorlt(motorLayout, [motorLayout0, motorLayoutA1, motorLayoutA2, motorLayoutA3, 
+			motorLayoutB1, motorLayoutB2, motorLayoutB3, 
+			motorLayoutC1, motorLayoutC2, motorLayoutC3,
+			motorLayoutD1, motorLayoutD2, motorLayoutD3,
+			motorLayoutE1, motorLayoutE2, motorLayoutE3], lt=True)
 
 
 		mainLayout = QVBoxLayout()
 		mainLayout.addLayout(usartLayout)
+		mainLayout.addLayout(motorMainFuncLayout)
 		mainLayout.addLayout(motorModeLayout)
 		mainLayout.addLayout(motorLayout)
-		mainLayout.addStretch(1)
+
+
 
 		self.setLayout(mainLayout)
 
@@ -228,23 +217,51 @@ class Window(QWidget):
 			newLineEdit.setPlaceholderText(placeholder)
 		return newLineEdit
 
-	def addwt(self, Layout, Wts):
-		for wt in Wts:
+	def addwtorlt(self, Layout, Wts, lt=False):
+		for i in range(0, len(Wts)):
 			Layout.addStretch(1)
-			Layout.addWidget(wt)
+			if lt is False:
+				Layout.addWidget(Wts[i])
+			if lt is True:
+				Layout.addLayout(Wts[i])
 		return Layout
 
 	def speedChanged(self):
 		pass
 
 	def angleChanged(self):
-		pass
+		# angleSet = []
+		# for i in range(0, self.MotorNum):
+		# 	# angelSet.append(float(self.AngleLineEdit[i].text()))
+		# 	pass
+
+		QMessageBox.information(self, 'Debug', 'the fist element of Angle Set is '+self.AngleLineEdit[0].text())
+		print(type(self.AngleLineEdit[0].text()))
+		print(float(self.AngleLineEdit[0].text()))
 
 	def singleStepZ(self):
 		pass
 
 	def singleStepF(self):
 		pass
+
+	def alltest(self):
+		pass
+
+	def startup(self):
+		command = struct.pack('>ccc', b'a', b'\r', b'\n')
+		self.ser.write(command)
+		print(command)
+
+	def shutdown(self):
+		pass
+
+	def zero(self):
+		pass
+
+	def changeBaudRate(self, text):
+		self.baudrate = int(text)
+		QMessageBox.information(self, 'USART', 'You have changed Baud Rate to '+text)
 
 	def createPushButton(self,text='Button',tip=None, slot=None):
 		btn = QPushButton(text,self)
@@ -304,7 +321,7 @@ class Window(QWidget):
 
 	def USARTOpen(self):
 		try:
-			self.ser = serial.Serial(self.com, 115200)
+			self.ser = serial.Serial(self.com, self.baudrate)
 			QMessageBox.information(self,'USART', 'open USART successfully')
 		except Exception:
 			QMessageBox.information(self,'USART', 'cannot open the USART COM')
@@ -314,7 +331,8 @@ class Window(QWidget):
 			if self.ser is not None:
 				self.ser.close();
 				QMessageBox.information(self,'USART', 'close USART successfully')
-			QMessageBox.information(self,'USART', 'USART does not exit')
+			else:
+				QMessageBox.information(self,'USART', 'USART does not exit')
 		except Exception:
 			QMessageBox.information(self,'USART', 'cannot close the USART COM')
 

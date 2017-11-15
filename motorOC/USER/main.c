@@ -7,16 +7,15 @@
 #include "globalconfig.h"
 
 
-u16 step_a =0;
-u16 step_d = 10000;
-u16 timcc[MotorNum]={5000, 5000};
+u16 step_a[MotorNum] ={0, 0, 0, 0};
+u16 step_d[MotorNum] = {10000, 20000, 10000, 20000};
+u16 timcc[MotorNum]={500, 500, 500, 500};
 
 
 int main(void)
 {
 	u8 i = 0;
-//	u8 dirport[MotorNum] = {1, 2};
-	u8 dir[MotorNum] = {0, 1};
+	u8 dir[MotorNum] = {0, 1, 0, 1};
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 	
 	delay_init();
@@ -27,10 +26,14 @@ int main(void)
 	DIR_GPIO_Configuration();
 	Set_ALL_Dir_GPIO(dir);
 	
-	TIM_GPIO_Config_Init();
-	TIM_NVIC_Configuration();
-	TIM_Congfig_Init(71);
 	
+	TIM_GPIO_Config_Init();
+	
+	TIM_NVIC_Configuration();
+	
+	TIM2_Congfig_Init(71);
+	LED1_Flicker(2);
+
 	while(1)
 	{
 		if(USART_RX_STA & 0x8000)
@@ -40,7 +43,9 @@ int main(void)
 				case 'a':
 				{
 					LED1_Flicker(3);
-					step_a = 0;
+					for (i=0;i<MotorNum;i++)
+						step_a[i] = 0;
+					TIM2_Congfig_Init(71);
 					TIM_Startup();
 					break;
 				}
@@ -52,7 +57,7 @@ int main(void)
 						timcc[i] = str2u16(USART_RX_BUF, 1+2*i);
 					}
 					TIM_Shutdown();
-					TIM_Congfig_Init(71);
+					TIM2_Congfig_Init(71);
 					break;
 				}
 				case 'd':
@@ -65,12 +70,12 @@ int main(void)
 					Set_ALL_Dir_GPIO(dir);
 					break;
 				}
-				case 's':
-				{
-					LED1_Flicker(2);
-					step_d = str2u16(USART_RX_BUF, 1);
-					break;
-				}
+//				case 's':
+//				{
+//					LED1_Flicker(2);
+//					step_d = str2u16(USART_RX_BUF, 1);
+//					break;
+//				}
 				default:
 				{
 					break;

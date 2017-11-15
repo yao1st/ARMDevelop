@@ -1,9 +1,9 @@
 #include "dirc.h"
 #include "globalconfig.h"
 
-GPIO_TypeDef *Dir_GPIO_Port[MotorNum] = {GPIOC, GPIOC};
-u16 Dir_Pins[MotorNum] = {GPIO_Pin_1, GPIO_Pin_2};
-u16 Dir_Pins_Connect = GPIO_Pin_1 | GPIO_Pin_2;
+GPIO_TypeDef *Dir_GPIO_Port[MotorNum] = {GPIOC, GPIOC, GPIOC, GPIOC};
+u16 Dir_Pins[MotorNum] = {GPIO_Pin_1, GPIO_Pin_2, GPIO_Pin_3, GPIO_Pin_4};
+u16 Dir_Pins_Connect = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4;
 
 void DIR_GPIO_Configuration(void)
 {
